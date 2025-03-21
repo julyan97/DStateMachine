@@ -2,8 +2,32 @@
 
     <PropertyGroup>
         <Nullable>enable</Nullable>
-        <TargetFramework>net9.0</TargetFramework>
         <RootNamespace>DStateMachine</RootNamespace>
+        <TargetFrameworks>net9.0;netstandard2.1</TargetFrameworks>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageId>DSeries.DStateMachine.Core</PackageId>
+        <Title>DStateMachine.Core</Title>
+        <Authors>Julian B.</Authors>
+        <Description>A generic, asynchronous state machine library for .NET with guard conditions, dynamic transitions, entry/exit actions, and a fluent configuration API.</Description>
+        <Copyright>© 2025 DSeries.DStateMachine.Core</Copyright>
+        <PackageProjectUrl>https://github.com/julyan97/DStateMachine</PackageProjectUrl>
+        <PackageIcon>D-Logo.png</PackageIcon>
+        <RepositoryUrl>https://github.com/julyan97/DStateMachine</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>	StateMachine;FSM;Transitions;Asynchronous;DotNet;CSharp;</PackageTags>
+        <PackageReleaseNotes>Initial release of DStateMachine.Core with support for guard conditions, dynamic transitions, and entry/exit actions.</PackageReleaseNotes>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
+
+
+    <PropertyGroup>
+        <PackageIcon>D-Logo.png</PackageIcon>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="D-Logo.png" Pack="true" PackagePath="." />
+    </ItemGroup>
+
 
 </Project>

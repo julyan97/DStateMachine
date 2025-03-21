@@ -13,7 +13,7 @@ namespace DStateMachine
         private readonly TTrigger _trigger;
         private readonly DStateMachine<TTrigger, TState> _machine;
         // Each pending transition is stored along with a flag indicating whether it is internal.
-        private readonly List<(Func<bool> Guard, Func<Task<TState>> DestinationSelector, bool IsInternal)> _pendingTransitions = new();
+        private readonly List<(Func<bool> Guard, Func<Task<TState>> DestinationSelector, bool IsInternal)> _pendingTransitions = new List<(Func<bool> Guard, Func<Task<TState>> DestinationSelector, bool IsInternal)>();
 
         internal TransitionBuilder(TState sourceState, TTrigger trigger, DStateMachine<TTrigger, TState> machine)
         {

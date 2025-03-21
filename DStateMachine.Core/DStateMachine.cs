@@ -12,8 +12,8 @@ namespace DStateMachine
     public class DStateMachine<TTrigger, TState>
     {
         private TState _state;
-        private readonly Dictionary<(TState, TTrigger), List<Transition<TState>>> _transitions = new();
-        private readonly Dictionary<TState, StateActions> _stateActions = new();
+        private readonly Dictionary<(TState, TTrigger), List<Transition<TState>>> _transitions = new Dictionary<(TState, TTrigger), List<Transition<TState>>>();
+        private readonly Dictionary<TState, StateActions> _stateActions = new Dictionary<TState, StateActions>();
 
         /// <summary>
         /// Optional hook that is invoked when a trigger is fired but no valid transition is found.
