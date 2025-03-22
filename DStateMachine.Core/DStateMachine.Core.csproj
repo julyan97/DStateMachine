@@ -15,8 +15,25 @@
         <RepositoryUrl>https://github.com/julyan97/DStateMachine</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>	StateMachine;FSM;Transitions;Asynchronous;DotNet;CSharp;</PackageTags>
-        <PackageReleaseNotes>Initial release of DStateMachine.Core with support for guard conditions, dynamic transitions, and entry/exit actions.</PackageReleaseNotes>
+        <PackageReleaseNotes>Release Notes
+
+Async Transition Enhancements:
+
+Introduced asynchronous guards for transitions by converting existing synchronous guard methods to asynchronous (wrapped in Task.FromResult).
+
+Added a new IfAsync method to support asynchronous guard conditions.
+
+Updated all transition delegates (fixed, dynamic, and internal) to support asynchronous execution.
+
+Async Action Support:
+
+Added the ExecuteActionAsync method to allow asynchronous execution of side-effect actions during internal transitions.
+
+Maintained backward compatibility by keeping the synchronous ExecuteAction method with wrapping.
+            
+These changes provide a flexible and robust asynchronous state machine framework while ensuring existing synchronous functionality remains intact.</PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <Version>1.0.1</Version>
     </PropertyGroup>
 
 
