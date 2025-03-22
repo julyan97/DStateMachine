@@ -501,6 +501,29 @@ For more, see the `DefaultOnEntry` and `DefaultOnExit` registration methods in `
 - Keep transition logic lightweight and non-blocking.
 
 
+## 🔍 DStateMachine features
+
+A feature-by-feature 
+
+| Feature                          | DStateMachine                                                  |
+|----------------------------------|----------------------------------------------------------------|
+| **Asynchronous Support**         | ✅ Built-in async/await throughout                             | 
+| **Fluent API**                   | ✅ Clean, chainable DSL                                        |
+| **Generic State & Trigger Types**| ✅ Full support (`string`, `enum`, etc.)                       |
+| **Entry/Exit Hooks**             | ✅ Both sync & async, with access to state machine             |
+| **Global Entry/Exit Actions**    | ✅ Via `DefaultOnEntry/Exit`                                   |
+| **Per-State Default Ignore**     | ✅ Can opt out of default entry/exit per state                 |
+| **Internal Transitions**         | ✅ Explicit via `ExecuteAction` (sync/async)                   |
+| **Dynamic Transitions**          | ✅ Sync & async destination selectors supported                |
+| **Guard Clauses**                | ✅ Sync & async guard support                                  |
+| **Unhandled Trigger Handling**   | ✅ Configurable async handler                                  |
+| **Visualization (Graph Export)** | ✅ DOT export + Tree text visualization                        |
+| **Testability**                  | ✅ Built-in xUnit tests, clean test support                    |
+| **State Hierarchies / Substates**| ❌ Not yet supported                                           |
+| **Licensing**                    | MIT                                                            |
+| **Maturity / Community**         | 🆕 Emerging, modern design                                     |
+
+---
 
 
 ## 🙌 Contributions
