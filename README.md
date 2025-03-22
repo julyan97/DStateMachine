@@ -328,6 +328,171 @@ You may define multiple entry or exit actions per state—they will be executed 
 
 ---
 
+# 🧭 Default Entry and Exit Actions
+
+The `DStateMachine<TTrigger, TState>` class supports defining global entry and exit actions that apply to **all states**. These are called **Default Entry** and **Default Exit** actions.
+
+They are executed **in addition to** any state-specific entry/exit actions and are useful for:
+
+- Logging state transitions globally
+- Auditing
+- Notifying external services
+- Performing shared cleanup or setup tasks
+
+---
+
+## 🟢 Default Entry Actions
+
+Default entry actions are executed every time **any state is entered**.
+
+### ➕ Adding Default Entry Actions
+
+```csharp
+stateMachine.DefaultOnEntry(sm =>
+{
+    Console.WriteLine($"[ENTRY] Entering state: {sm.CurrentState}");
+});
+```
+
+You can also use an asynchronous version:
+
+```csharp
+stateMachine.DefaultOnEntry(async sm =>
+{
+    await logService.LogAsync($"Entered state: {sm.CurrentState}");
+});
+```
+
+---
+
+## 🔴 Default Exit Actions
+
+Default exit actions are executed every time **any state is exited**.
+
+### ➕ Adding Default Exit Actions
+
+```csharp
+stateMachine.DefaultOnExit(sm =>
+{
+    Console.WriteLine($"[EXIT] Exiting state: {sm.CurrentState}");
+});
+```
+
+Or asynchronously:
+
+```csharp
+stateMachine.DefaultOnExit(async sm =>
+{
+    await telemetry.TrackStateExitAsync(sm.CurrentState);
+});
+```
+
+---
+
+## 🔄 Execution Order
+
+When a state transition occurs, the actions are executed in the following order:
+
+1. **State-specific Exit Actions**
+2. **Default Exit Actions** ✅
+3. (State change)
+4. **Default Entry Actions** ✅
+5. **State-specific Entry Actions**
+
+This ensures shared logic is applied **after specific logic during exit**, and **before specific logic during entry**.
+
+---
+
+## ✅ Best Practices
+
+- Use default entry/exit for **logging**, **telemetry**, or **global side-effects**.
+- Keep default actions **lightweight and non-blocking** where possible.
+- Avoid introducing state-specific logic in global hooks — keep them generic.
+
+---
+
+## 📌 Summary
+
+| Action Type     | Scope    | Supports Async | Receives State Machine |
+|----------------|----------|----------------|-------------------------|
+| DefaultOnEntry | All States | ✅ Yes        | ✅ Yes                 |
+| DefaultOnExit  | All States | ✅ Yes        | ✅ Yes                 |
+
+These hooks make your state machine more powerful and extensible without cluttering individual state definitions.
+
+# Ignoring Default Entry and Exit Actions in DStateMachine
+
+## Overview
+
+In `DStateMachine`, global default actions can be defined for every state transition:
+
+- **Default Entry Actions**: Executed on entry to any state.
+- **Default Exit Actions**: Executed on exit from any state.
+
+However, there are cases where you may want to disable these default actions for specific states. This feature allows for more precise control over individual state behaviors.
+
+## How to Ignore Default Actions
+
+When configuring a specific state, you can explicitly tell the state machine to skip the default entry and/or exit actions using the following fluent API:
+
+```csharp
+stateMachine.Configure(State.SomeState)
+    .IgnoreDefaultEntry()
+    .IgnoreDefaultExit();
+```
+
+### Methods
+
+#### `IgnoreDefaultEntry()`
+> Prevents the global default entry actions from running when this state is entered.
+
+#### `IgnoreDefaultExit()`
+> Prevents the global default exit actions from running when this state is exited.
+
+## Example
+
+```csharp
+var sm = new DStateMachine<string, MyState>(MyState.Idle);
+
+sm.DefaultOnEntry(sm => Console.WriteLine("[Default] Entered state."));
+sm.DefaultOnExit(sm => Console.WriteLine("[Default] Exited state."));
+
+sm.Configure(MyState.Processing)
+    .OnEntry(sm => Console.WriteLine("[State] Entering Processing"))
+    .OnExit(sm => Console.WriteLine("[State] Exiting Processing"))
+    .IgnoreDefaultEntry() // Skips default entry action
+    .IgnoreDefaultExit(); // Skips default exit action
+
+sm.Configure(MyState.Idle)
+    .OnTrigger("Start", t => t.ChangeState(MyState.Processing));
+
+await sm.FireAsync("Start");
+```
+
+**Output:**
+```
+[State] Entering Processing
+```
+
+In this example, the state-specific entry action runs, but the default actions are ignored for `Processing`.
+
+## Notes
+
+- Ignoring default actions is optional. If not called, the default actions are applied as usual.
+- This configuration is per-state and can be applied independently for entry and exit.
+- Internal transitions do not trigger entry or exit actions, including default ones.
+
+## Use Cases
+
+- You want more control during transitions to/from certain critical states.
+- You have special initialization/cleanup logic that should not inherit the global behavior.
+- You want to optimize performance by skipping unnecessary actions in specific states.
+
+---
+
+For more, see the `DefaultOnEntry` and `DefaultOnExit` registration methods in `DStateMachine`.
+
+
 ## Best Practices
 
 - Define guards clearly to ensure transitions occur under expected conditions.

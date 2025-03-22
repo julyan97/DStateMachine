@@ -15,11 +15,19 @@
         <RepositoryUrl>https://github.com/julyan97/DStateMachine</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>	StateMachine;FSM;Transitions;Asynchronous;DotNet;CSharp;</PackageTags>
-        <PackageReleaseNotes>Release Notes Vesron 1.0.1:
+        <PackageReleaseNotes>Release Notes v1.0.2
 
-Async Transition Enhancements:
+✅ Global Entry/Exit Actions: You can now define default entry and exit behaviors that run on every transition via DefaultOnEntry() and DefaultOnExit() methods.
 
-Introduced asynchronous guards for transitions by converting existing synchronous guard methods to asynchronous (wrapped in Task.FromResult).
+🎯 Per-State Overrides: States can opt out of global actions using .IgnoreDefaultEntry() and .IgnoreDefaultExit().
+
+🔄 Async Entry/Exit Support: OnEntry() and OnExit() now support async delegates and provide access to the state machine instance.
+
+🌳 Improved Visualization: New VisualizeAsTree() method for easy-to-read text-based layout of transitions.
+
+✅ xUnit Test Coverage: Added unit tests to verify global action handling and ignore logic.
+
+🛠️ Internal enhancements for cleaner async flow and state behavior control.
 
 Added a new IfAsync method to support asynchronous guard conditions.
 
@@ -33,7 +41,7 @@ Maintained backward compatibility by keeping the synchronous ExecuteAction metho
             
 These changes provide a flexible and robust asynchronous state machine framework while ensuring existing synchronous functionality remains intact.</PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <Version>1.0.1</Version>
+        <Version>1.0.2</Version>
     </PropertyGroup>
 
 

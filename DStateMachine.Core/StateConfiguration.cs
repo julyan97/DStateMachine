@@ -23,6 +23,24 @@ namespace DStateMachine
         public DStateMachine<TTrigger, TState> Machine => _machine;
 
         /// <summary>
+        /// Configures the state to ignore the global default entry actions.
+        /// </summary>
+        public StateConfiguration<TTrigger, TState> IgnoreDefaultEntry()
+        {
+            _machine.GetOrCreateStateActions(_state).IgnoreDefaultEntry = true;
+            return this;
+        }
+
+        /// <summary>
+        /// Configures the state to ignore the global default exit actions.
+        /// </summary>
+        public StateConfiguration<TTrigger, TState> IgnoreDefaultExit()
+        {
+            _machine.GetOrCreateStateActions(_state).IgnoreDefaultExit = true;
+            return this;
+        }
+        
+        /// <summary>
         /// Registers an asynchronous action to execute when entering the state.
         /// </summary>
         public StateConfiguration<TTrigger, TState> OnEntry(Action<DStateMachine<TTrigger, TState>> action)
@@ -65,6 +83,26 @@ namespace DStateMachine
         public StateConfiguration<TTrigger, TState> OnExit(Func<Task> action)
         {
             _machine.GetOrCreateStateActions(_state).ExitActions.Add(action);
+            return this;
+        }
+
+        /// <summary>
+        /// Registers an asynchronous entry action that receives the state machine.
+        /// </summary>
+        public StateConfiguration<TTrigger, TState> OnEntry(Func<DStateMachine<TTrigger, TState>, Task> asyncAction)
+        {
+            _machine.GetOrCreateStateActions(_state)
+                .EntryActions.Add(() => asyncAction(_machine));
+            return this;
+        }
+
+        /// <summary>
+        /// Registers an asynchronous exit action that receives the state machine.
+        /// </summary>
+        public StateConfiguration<TTrigger, TState> OnExit(Func<DStateMachine<TTrigger, TState>, Task> asyncAction)
+        {
+            _machine.GetOrCreateStateActions(_state)
+                .ExitActions.Add(() => asyncAction(_machine));
             return this;
         }
 

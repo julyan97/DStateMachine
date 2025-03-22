@@ -300,6 +300,96 @@ namespace Tests
             Assert.Equal("A", sm.CurrentState);
             Assert.Equal(1, counter);
         }
+        
+         [Fact]
+        public async Task IgnoreDefaultEntryActions_Test()
+        {
+            int defaultEntryCounter = 0;
+            int stateSpecificEntryCounter = 0;
+
+            var sm = new DStateMachine<TestTrigger, TestState>(TestState.A);
+
+            // Register a global default entry action.
+            sm.DefaultOnEntry(machine => { defaultEntryCounter++;});
+
+            // Configure StateB to ignore default entry actions and add its own entry action.
+            sm.Configure(TestState.B)
+              .IgnoreDefaultEntry()
+              .OnEntry(machine => { stateSpecificEntryCounter++; });
+
+            // Configure a transition from StateA to StateB.
+            sm.Configure(TestState.A)
+              .OnTrigger(TestTrigger.X, t => t.ChangeState(TestState.B));
+
+            await sm.FireAsync(TestTrigger.X);
+
+            // The global default entry action should be ignored.
+            Assert.Equal(0, defaultEntryCounter);
+            Assert.Equal(1, stateSpecificEntryCounter);
+            Assert.Equal(TestState.B, sm.CurrentState);
+        }
+
+        [Fact]
+        public async Task IgnoreDefaultExitActions_Test()
+        {
+            int defaultExitCounter = 0;
+            int stateSpecificExitCounter = 0;
+
+            var sm = new DStateMachine<TestTrigger, TestState>(TestState.A);
+
+            // Register a global default exit action.
+            sm.DefaultOnExit(machine => { defaultExitCounter++; });
+
+            // Configure StateA to ignore default exit actions and add its own exit action.
+            sm.Configure(TestState.A)
+              .IgnoreDefaultExit()
+              .OnExit(machine => { stateSpecificExitCounter++; })
+              .OnTrigger(TestTrigger.X, t => t.ChangeState(TestState.B));
+
+            // Configure StateB for completeness.
+            sm.Configure(TestState.B)
+              .OnEntry(machine => { });
+
+            await sm.FireAsync(TestTrigger.X);
+
+            // The global default exit action should be ignored.
+            Assert.Equal(0, defaultExitCounter);
+            Assert.Equal(1, stateSpecificExitCounter);
+            Assert.Equal(TestState.B, sm.CurrentState);
+        }
+
+        [Fact]
+        public async Task ExecuteAllActions_WhenNotIgnored_Test()
+        {
+            int defaultEntryCounter = 0;
+            int defaultExitCounter = 0;
+            int stateSpecificEntryCounter = 0;
+            int stateSpecificExitCounter = 0;
+
+            var sm = new DStateMachine<TestTrigger, TestState>(TestState.A);
+
+            // Register global default entry and exit actions.
+            sm.DefaultOnEntry(machine => { defaultEntryCounter++; return Task.CompletedTask; });
+            sm.DefaultOnExit(machine => { defaultExitCounter++; return Task.CompletedTask; });
+
+            // Configure StateA without ignoring default exit actions.
+            sm.Configure(TestState.A)
+              .OnExit(machine => { stateSpecificExitCounter++; })
+              .OnTrigger(TestTrigger.X, t => t.ChangeState(TestState.B));
+
+            // Configure StateB without ignoring default entry actions.
+            sm.Configure(TestState.B)
+              .OnEntry(machine => { stateSpecificEntryCounter++; });
+
+            await sm.FireAsync(TestTrigger.X);
+
+            // Both global default and state-specific actions should be executed.
+            Assert.Equal(1, defaultExitCounter);
+            Assert.Equal(1, stateSpecificExitCounter);
+            Assert.Equal(1, defaultEntryCounter);
+            Assert.Equal(1, stateSpecificEntryCounter);
+            Assert.Equal(TestState.B, sm.CurrentState);
+        }
 
         #endregion
     }

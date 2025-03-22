@@ -320,25 +320,31 @@ namespace DStateMachine
                 }
             }
 
-            // Execute default exit actions, each receiving the state machine.
-            foreach (var defaultExit in _defaultExitActions)
+            // Execute default exit actions if the current state doesn't ignore them.
+            if (!_stateActions.TryGetValue(_state, out var sourceActions) || !sourceActions.IgnoreDefaultExit)
             {
-                await defaultExit(this).ConfigureAwait(false);
+                foreach (var defaultExit in _defaultExitActions)
+                {
+                    await defaultExit(this).ConfigureAwait(false);
+                }
             }
 
             var destination = await validTransition.DestinationSelector().ConfigureAwait(false);
             _state = destination;
 
-            // Execute default entry actions, each receiving the state machine.
-            foreach (var defaultEntry in _defaultEntryActions)
+            // Execute default entry actions if the new state doesn't ignore them.
+            if (!_stateActions.TryGetValue(_state, out var newStateActions) || !newStateActions.IgnoreDefaultEntry)
             {
-                await defaultEntry(this).ConfigureAwait(false);
+                foreach (var defaultEntry in _defaultEntryActions)
+                {
+                    await defaultEntry(this).ConfigureAwait(false);
+                }
             }
 
             // Execute state-specific entry actions.
-            if (_stateActions.TryGetValue(_state, out var newActions))
+            if (_stateActions.TryGetValue(_state, out newStateActions))
             {
-                foreach (var entryAction in newActions.EntryActions)
+                foreach (var entryAction in newStateActions.EntryActions)
                 {
                     await entryAction().ConfigureAwait(false);
                 }
