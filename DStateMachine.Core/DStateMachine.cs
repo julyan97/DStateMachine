@@ -44,7 +44,7 @@ namespace DStateMachine
         /// <summary>
         /// Begins configuration for the specified state.
         /// </summary>
-        public StateConfiguration<TTrigger, TState> Configure(TState state)
+        public StateConfiguration<TTrigger, TState> ForState(TState state)
         {
             GetOrCreateStateActions(state);
             return new StateConfiguration<TTrigger, TState>(state, this);
@@ -263,7 +263,7 @@ namespace DStateMachine
         /// For an internal transition, the associated delegate is executed without changing state or firing entry/exit actions.
         /// If no valid transition exists, OnUnhandledTrigger is invoked (if provided); otherwise, an exception is thrown.
         /// </summary>
-        public async Task FireAsync(TTrigger trigger)
+        public async Task TriggerAsync(TTrigger trigger)
         {
             var key = (_state, trigger);
             if (!_transitions.TryGetValue(key, out var transitions))
@@ -355,9 +355,9 @@ namespace DStateMachine
         /// <summary>
         /// Synchronously fires the specified trigger.
         /// </summary>
-        public void Fire(TTrigger trigger)
+        public void Trigger(TTrigger trigger)
         {
-            FireAsync(trigger).GetAwaiter().GetResult();
+            TriggerAsync(trigger).GetAwaiter().GetResult();
         }
 
         internal StateActions GetOrCreateStateActions(TState state)

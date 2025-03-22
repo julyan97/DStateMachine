@@ -22,14 +22,14 @@
 ```csharp
 var sm = new DStateMachine<string, string>("A");
 
-sm.Configure("A")
+sm.ForState("A")
     .OnEntry(() => Console.WriteLine("Entering A"))
     .OnExit(() => Console.WriteLine("Exiting A"))
     .OnTrigger("toB", tb => tb.ChangeState("B"));
 
-sm.Configure("B").OnEntry(() => Console.WriteLine("Entered B"));
+sm.ForState("B").OnEntry(() => Console.WriteLine("Entered B"));
 
-await sm.FireAsync("toB");
+await sm.TriggerAsync("toB");
 Console.WriteLine(sm.CurrentState); // Output: B
 ```
 
@@ -40,8 +40,8 @@ Console.WriteLine(sm.CurrentState); // Output: B
 ### ✅ Generic Type Support
 ```csharp
 var sm = new DStateMachine<int, int>(0);
-sm.Configure(0).OnTrigger(1, tb => tb.ChangeState(2));
-sm.Fire(1);
+sm.ForState(0).OnTrigger(1, tb => tb.ChangeState(2));
+sm.Trigger(1);
 Console.WriteLine(sm.CurrentState); // Output: 2
 ```
 
@@ -50,20 +50,20 @@ Console.WriteLine(sm.CurrentState); // Output: 2
 var sm = new DStateMachine<string, string>("Init");
 bool entered = false, exited = false;
 
-sm.Configure("Init")
+sm.ForState("Init")
     .OnEntry(() => { entered = true; return Task.CompletedTask; })
     .OnExit(() => { exited = true; return Task.CompletedTask; })
     .OnTrigger("go", tb => tb.ChangeState("Done"));
 
-sm.Configure("Done").OnEntry(() => Task.CompletedTask);
-sm.Fire("go");
+sm.ForState("Done").OnEntry(() => Task.CompletedTask);
+sm.Trigger("go");
 Console.WriteLine($"Entered: {entered}, Exited: {exited}"); // Output: Entered: False, Exited: True
 ```
 
 ### ⛔ Guard Clauses
 ```csharp
 var sm = new DStateMachine<string, string>("A");
-sm.Configure("A")
+sm.ForState("A")
     .OnTrigger("toB", tb => tb.ChangeState("B").If(() => false));
 
 sm.OnUnhandledTrigger((trigger, machine) => {
@@ -71,33 +71,33 @@ sm.OnUnhandledTrigger((trigger, machine) => {
     return Task.CompletedTask;
 });
 
-sm.Fire("toB"); // Output: Blocked by guard
+sm.Trigger("toB"); // Output: Blocked by guard
 ```
 
 ### ⏳ Asynchronous Transitions
 ```csharp
 var sm = new DStateMachine<string, string>("Start");
-sm.Configure("Start")
+sm.ForState("Start")
     .OnTrigger("load", tb => tb.ChangeStateAsync(async () => {
         await Task.Delay(100);
         return "Loaded";
     }));
 
-sm.Configure("Loaded").OnEntry(() => Task.CompletedTask);
-await sm.FireAsync("load");
+sm.ForState("Loaded").OnEntry(() => Task.CompletedTask);
+await sm.TriggerAsync("load");
 Console.WriteLine(sm.CurrentState); // Output: Loaded
 ```
 
 ### 🧠 Dynamic Transitions
 ```csharp
 var sm = new DStateMachine<string, string>("A");
-sm.Configure("A")
+sm.ForState("A")
     .OnTrigger("toNext", tb => tb.ChangeState(() => DateTime.Now.Second % 2 == 0 ? "Even" : "Odd"));
 
-sm.Configure("Even").OnEntry(() => Task.CompletedTask);
-sm.Configure("Odd").OnEntry(() => Task.CompletedTask);
+sm.ForState("Even").OnEntry(() => Task.CompletedTask);
+sm.ForState("Odd").OnEntry(() => Task.CompletedTask);
 
-sm.Fire("toNext");
+sm.Trigger("toNext");
 Console.WriteLine(sm.CurrentState); // Output: "Even" or "Odd"
 ```
 
@@ -106,10 +106,10 @@ Console.WriteLine(sm.CurrentState); // Output: "Even" or "Odd"
 var sm = new DStateMachine<string, string>("Idle");
 bool logged = false;
 
-sm.Configure("Idle")
+sm.ForState("Idle")
     .OnTrigger("ping", tb => tb.ExecuteAction(() => logged = true));
 
-await sm.FireAsync("ping");
+await sm.TriggerAsync("ping");
 Console.WriteLine($"State: {sm.CurrentState}, Logged: {logged}");
 // Output: State: Idle, Logged: True
 ```
@@ -117,18 +117,18 @@ Console.WriteLine($"State: {sm.CurrentState}, Logged: {logged}");
 ### 💬 Fluent DSL
 ```csharp
 var sm = new DStateMachine<string, string>("X");
-sm.Configure("X")
+sm.ForState("X")
     .OnTrigger("a", tb => tb.ChangeState("A"))
     .OnTrigger("b", tb => tb.ChangeState("B"));
 
-Console.WriteLine(sm.Configure("X").Machine == sm); // Output: True
+Console.WriteLine(sm.ForState("X").Machine == sm); // Output: True
 ```
 
 ### 📈 DOT Graph Export
 ```csharp
 var sm = new DStateMachine<string, string>("Start");
-sm.Configure("Start").OnTrigger("toEnd", tb => tb.ChangeState("End"));
-sm.Configure("End").OnEntry(() => Task.CompletedTask);
+sm.ForState("Start").OnTrigger("toEnd", tb => tb.ChangeState("End"));
+sm.ForState("End").OnEntry(() => Task.CompletedTask);
 
 string dot = sm.ExportToDot();
 Console.WriteLine(dot);
@@ -141,8 +141,8 @@ Console.WriteLine(dot);
 
 1. Clone the repository or add the files to your project.
 2. Create a new instance: `new DStateMachine<TTrigger, TState>(initialState)`.
-3. Configure states using `.Configure(state)` and chain `OnEntry`, `OnExit`, and `OnTrigger`.
-4. Fire transitions using `Fire(trigger)` or `await FireAsync(trigger)`.
+3. Configure states using `.ForState(state)` and chain `OnEntry`, `OnExit`, and `OnTrigger`.
+4. Fire transitions using `Trigger(trigger)` or `await TriggerAsync(trigger)`.
 
 ---
 
@@ -267,18 +267,18 @@ enum Triggers { Start, Stop, Pause, Ping }
 
 var stateMachine = new DStateMachine<Triggers, States>(States.Idle);
 
-stateMachine.Configure(States.Idle)
+stateMachine.ForState(States.Idle)
     .OnEntry(() => Console.WriteLine("Entering Idle"))
     .OnExit(() => Console.WriteLine("Exiting Idle"))
     .OnTrigger(Triggers.Start, t => t.ChangeState(States.Running).If(() => CanStart()))
     .OnTrigger(Triggers.Pause, t => t.ExecuteActionAsync(async () => await LogPauseAttempt()))
     .OnTrigger(Triggers.Ping, t => t.ExecuteAction(() => Console.WriteLine("Ping from Idle")));
 
-stateMachine.Configure(States.Running)
+stateMachine.ForState(States.Running)
     .OnTrigger(Triggers.Stop, t => t.ChangeStateAsync(async () => await DetermineStopState()))
     .OnTrigger(Triggers.Ping, t => t.ExecuteAction(() => Console.WriteLine("Ping from Running")));
 
-await stateMachine.FireAsync(Triggers.Start);
+await stateMachine.TriggerAsync(Triggers.Start);
 ```
 
 ---
@@ -312,14 +312,14 @@ public StateConfiguration<TTrigger, TState> OnExit(Func<Task> asyncAction)
 
 #### Synchronous Entry/Exit
 ```csharp
-stateMachine.Configure(States.Idle)
+stateMachine.ForState(States.Idle)
     .OnEntry(sm => Console.WriteLine("Now in Idle"))
     .OnExit(sm => Console.WriteLine("Leaving Idle"));
 ```
 
 #### Asynchronous Entry/Exit
 ```csharp
-stateMachine.Configure(States.Running)
+stateMachine.ForState(States.Running)
     .OnEntry(async () => await LogAsync("Entered Running"))
     .OnExit(async () => await LogAsync("Exited Running"));
 ```
@@ -436,7 +436,7 @@ However, there are cases where you may want to disable these default actions for
 When configuring a specific state, you can explicitly tell the state machine to skip the default entry and/or exit actions using the following fluent API:
 
 ```csharp
-stateMachine.Configure(State.SomeState)
+stateMachine.ForState(State.SomeState)
     .IgnoreDefaultEntry()
     .IgnoreDefaultExit();
 ```
@@ -457,16 +457,16 @@ var sm = new DStateMachine<string, MyState>(MyState.Idle);
 sm.DefaultOnEntry(sm => Console.WriteLine("[Default] Entered state."));
 sm.DefaultOnExit(sm => Console.WriteLine("[Default] Exited state."));
 
-sm.Configure(MyState.Processing)
+sm.ForState(MyState.Processing)
     .OnEntry(sm => Console.WriteLine("[State] Entering Processing"))
     .OnExit(sm => Console.WriteLine("[State] Exiting Processing"))
     .IgnoreDefaultEntry() // Skips default entry action
     .IgnoreDefaultExit(); // Skips default exit action
 
-sm.Configure(MyState.Idle)
+sm.ForState(MyState.Idle)
     .OnTrigger("Start", t => t.ChangeState(MyState.Processing));
 
-await sm.FireAsync("Start");
+await sm.TriggerAsync("Start");
 ```
 
 **Output:**
