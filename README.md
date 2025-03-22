@@ -146,6 +146,198 @@ Console.WriteLine(dot);
 
 ---
 
+# DStateMachine Documentation
+
+## `OnTrigger` and Transition States
+
+### Overview
+
+The `OnTrigger` method is part of the fluent API provided by `DStateMachine`. It configures state transitions based on triggers. Each transition may specify synchronous or asynchronous destination states, guard conditions, or internal actions.
+
+### Method Signature
+
+```csharp
+public StateConfiguration<TTrigger, TState> OnTrigger(TTrigger trigger, Action<TransitionBuilder<TTrigger, TState>> config)
+```
+
+- `trigger`: The trigger causing the transition.
+- `config`: Configuration action for defining the transitions.
+
+---
+
+## `TransitionBuilder<TTrigger, TState>`
+
+### Overview
+
+The `TransitionBuilder` class provides a fluent interface to define transitions for a given trigger. It supports:
+
+- Fixed and dynamic destination states
+- Asynchronous transitions
+- Guard conditions
+- Internal (side-effect-only) actions
+
+### Methods
+
+#### `ChangeState`
+```csharp
+public TransitionBuilder<TTrigger, TState> ChangeState(TState destination)
+```
+Transitions to a specific state.
+
+#### `ChangeState(Func<TState> destinationSelector)`
+```csharp
+public TransitionBuilder<TTrigger, TState> ChangeState(Func<TState> destinationSelector)
+```
+Transitions dynamically based on the provided function.
+
+#### `ChangeStateAsync(Func<Task<TState>> destinationSelector)`
+```csharp
+public TransitionBuilder<TTrigger, TState> ChangeStateAsync(Func<Task<TState>> destinationSelector)
+```
+Asynchronously determines the destination state.
+
+#### `If(Func<bool> guard)`
+```csharp
+public TransitionBuilder<TTrigger, TState> If(Func<bool> guard)
+```
+Adds a synchronous guard to the most recent transition.
+
+#### `IfAsync(Func<Task<bool>> asyncGuard)`
+```csharp
+public TransitionBuilder<TTrigger, TState> IfAsync(Func<Task<bool>> asyncGuard)
+```
+Adds an asynchronous guard.
+
+#### `ExecuteAction(Action action = null)`
+```csharp
+public TransitionBuilder<TTrigger, TState> ExecuteAction(Action action = null)
+```
+Defines an internal transition with a synchronous side-effect.
+
+#### `ExecuteActionAsync(Func<Task> actionAsync = null)`
+```csharp
+public TransitionBuilder<TTrigger, TState> ExecuteActionAsync(Func<Task> actionAsync = null)
+```
+Defines an internal transition with an asynchronous side-effect.
+
+### Example Usage per Method
+
+#### `ChangeState`
+```csharp
+.OnTrigger(Triggers.Start, t => t.ChangeState(States.Running))
+```
+
+#### `ChangeState (dynamic)`
+```csharp
+.OnTrigger(Triggers.Restart, t => t.ChangeState(() => ComputeNextState()))
+```
+
+#### `ChangeStateAsync`
+```csharp
+.OnTrigger(Triggers.Refresh, t => t.ChangeStateAsync(async () => await GetNextStateAsync()))
+```
+
+#### `If`
+```csharp
+.OnTrigger(Triggers.Start, t => t.ChangeState(States.Running).If(() => IsReady))
+```
+
+#### `IfAsync`
+```csharp
+.OnTrigger(Triggers.Start, t => t.ChangeStateAsync(GetRunningState).IfAsync(IsReadyAsync))
+```
+
+#### `ExecuteAction`
+```csharp
+.OnTrigger(Triggers.Ping, t => t.ExecuteAction(() => Console.WriteLine("Pinged!")))
+```
+
+#### `ExecuteActionAsync`
+```csharp
+.OnTrigger(Triggers.Ping, t => t.ExecuteActionAsync(async () => await LogPingAsync()))
+```
+
+---
+
+## Combined Example
+
+```csharp
+enum States { Idle, Running, Stopped }
+enum Triggers { Start, Stop, Pause, Ping }
+
+var stateMachine = new DStateMachine<Triggers, States>(States.Idle);
+
+stateMachine.Configure(States.Idle)
+    .OnEntry(() => Console.WriteLine("Entering Idle"))
+    .OnExit(() => Console.WriteLine("Exiting Idle"))
+    .OnTrigger(Triggers.Start, t => t.ChangeState(States.Running).If(() => CanStart()))
+    .OnTrigger(Triggers.Pause, t => t.ExecuteActionAsync(async () => await LogPauseAttempt()))
+    .OnTrigger(Triggers.Ping, t => t.ExecuteAction(() => Console.WriteLine("Ping from Idle")));
+
+stateMachine.Configure(States.Running)
+    .OnTrigger(Triggers.Stop, t => t.ChangeStateAsync(async () => await DetermineStopState()))
+    .OnTrigger(Triggers.Ping, t => t.ExecuteAction(() => Console.WriteLine("Ping from Running")));
+
+await stateMachine.FireAsync(Triggers.Start);
+```
+
+---
+
+## Handling Unhandled Triggers
+
+You can define a handler for triggers without defined transitions:
+
+```csharp
+stateMachine.OnUnhandledTrigger(async (trigger, machine) =>
+{
+    await LogAsync($"Unhandled trigger {trigger} in state {machine.CurrentState}");
+});
+```
+
+---
+
+```csharp
+public StateConfiguration<TTrigger, TState> OnEntry(Action<DStateMachine<TTrigger, TState>> action)
+public StateConfiguration<TTrigger, TState> OnEntry(Func<Task> asyncAction)
+
+public StateConfiguration<TTrigger, TState> OnExit(Action<DStateMachine<TTrigger, TState>> action)
+public StateConfiguration<TTrigger, TState> OnExit(Func<Task> asyncAction)
+```
+
+- `OnEntry`: Defines an action that runs after the state is entered.
+- `OnExit`: Defines an action that runs before the state is exited.
+- Both support synchronous and asynchronous versions.
+
+### Usage Examples
+
+#### Synchronous Entry/Exit
+```csharp
+stateMachine.Configure(States.Idle)
+    .OnEntry(sm => Console.WriteLine("Now in Idle"))
+    .OnExit(sm => Console.WriteLine("Leaving Idle"));
+```
+
+#### Asynchronous Entry/Exit
+```csharp
+stateMachine.Configure(States.Running)
+    .OnEntry(async () => await LogAsync("Entered Running"))
+    .OnExit(async () => await LogAsync("Exited Running"));
+```
+
+You may define multiple entry or exit actions per state—they will be executed in the order they are registered.
+
+---
+
+## Best Practices
+
+- Define guards clearly to ensure transitions occur under expected conditions.
+- Use internal transitions (`ExecuteAction`, `ExecuteActionAsync`) for logging, notifications, or other side effects.
+- Favor asynchronous methods for operations involving I/O or long-running tasks.
+- Keep transition logic lightweight and non-blocking.
+
+
+
+
 ## 🙌 Contributions
 
 Pull requests and issues are welcome! If you'd like to contribute improvements or new features, feel free to fork and open a PR.
