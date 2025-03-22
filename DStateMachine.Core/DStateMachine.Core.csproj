@@ -15,7 +15,7 @@
         <RepositoryUrl>https://github.com/julyan97/DStateMachine</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>	StateMachine;FSM;Transitions;Asynchronous;DotNet;CSharp;</PackageTags>
-        <PackageReleaseNotes>Release Notes v1.0.2
+        <PackageReleaseNotes>Release Notes v1.0.4
 
 ✅ Global Entry/Exit Actions: You can now define default entry and exit behaviors that run on every transition via DefaultOnEntry() and DefaultOnExit() methods.
 
@@ -41,7 +41,7 @@ Maintained backward compatibility by keeping the synchronous ExecuteAction metho
             
 These changes provide a flexible and robust asynchronous state machine framework while ensuring existing synchronous functionality remains intact.</PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <Version>1.0.3</Version>
+        <Version>1.0.4</Version>
     </PropertyGroup>
 
 
