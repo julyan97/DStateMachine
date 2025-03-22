@@ -15,7 +15,7 @@
         <RepositoryUrl>https://github.com/julyan97/DStateMachine</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>	StateMachine;FSM;Transitions;Asynchronous;DotNet;CSharp;</PackageTags>
-        <PackageReleaseNotes>Release Notes
+        <PackageReleaseNotes>Release Notes Vesron 1.0.1:
 
 Async Transition Enhancements:
 
