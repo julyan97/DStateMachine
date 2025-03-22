@@ -11,9 +11,12 @@ namespace DStateMachine
     {
         private readonly TState _sourceState;
         private readonly TTrigger _trigger;
+
         private readonly DStateMachine<TTrigger, TState> _machine;
-        // Each pending transition is stored along with a flag indicating whether it is internal.
-        private readonly List<(Func<bool> Guard, Func<Task<TState>> DestinationSelector, bool IsInternal)> _pendingTransitions = new List<(Func<bool> Guard, Func<Task<TState>> DestinationSelector, bool IsInternal)>();
+
+        // Now we store asynchronous guards.
+        private readonly List<(Func<Task<bool>> Guard, Func<Task<TState>> DestinationSelector, bool IsInternal)> _pendingTransitions
+            = new List<(Func<Task<bool>> Guard, Func<Task<TState>> DestinationSelector, bool IsInternal)>();
 
         internal TransitionBuilder(TState sourceState, TTrigger trigger, DStateMachine<TTrigger, TState> machine)
         {
@@ -32,7 +35,9 @@ namespace DStateMachine
         /// </summary>
         public TransitionBuilder<TTrigger, TState> ChangeState(TState destination)
         {
-            _pendingTransitions.Add((() => true, () => Task.FromResult(destination), false));
+            _pendingTransitions.Add((() => Task.FromResult(true),
+                () => Task.FromResult(destination),
+                false));
             return this;
         }
 
@@ -41,7 +46,9 @@ namespace DStateMachine
         /// </summary>
         public TransitionBuilder<TTrigger, TState> ChangeState(Func<TState> destinationSelector)
         {
-            _pendingTransitions.Add((() => true, () => Task.FromResult(destinationSelector()), false));
+            _pendingTransitions.Add((() => Task.FromResult(true),
+                () => Task.FromResult(destinationSelector()),
+                false));
             return this;
         }
 
@@ -50,12 +57,14 @@ namespace DStateMachine
         /// </summary>
         public TransitionBuilder<TTrigger, TState> ChangeStateAsync(Func<Task<TState>> destinationSelector)
         {
-            _pendingTransitions.Add((() => true, destinationSelector, false));
+            _pendingTransitions.Add((() => Task.FromResult(true),
+                destinationSelector,
+                false));
             return this;
         }
 
         /// <summary>
-        /// Applies a guard condition to the most recent transition.
+        /// Applies a synchronous guard condition to the most recent transition.
         /// </summary>
         public TransitionBuilder<TTrigger, TState> If(Func<bool> guard)
         {
@@ -63,17 +72,53 @@ namespace DStateMachine
                 throw new InvalidOperationException("No transition available to apply a guard. Call ChangeState or ExecuteAction first.");
 
             var last = _pendingTransitions[^1];
-            _pendingTransitions[_pendingTransitions.Count - 1] = (guard, last.DestinationSelector, last.IsInternal);
+            // Wrap the synchronous guard in a Task
+            _pendingTransitions[_pendingTransitions.Count - 1] = ((() => Task.FromResult(guard())), last.DestinationSelector, last.IsInternal);
             return this;
         }
 
         /// <summary>
-        /// Adds an alternative internal transition.
+        /// Applies an asynchronous guard condition to the most recent transition.
+        /// </summary>
+        public TransitionBuilder<TTrigger, TState> IfAsync(Func<Task<bool>> asyncGuard)
+        {
+            if (_pendingTransitions.Count == 0)
+                throw new InvalidOperationException("No transition available to apply a guard. Call ChangeState or ExecuteAction first.");
+
+            var last = _pendingTransitions[^1];
+            _pendingTransitions[_pendingTransitions.Count - 1] = (asyncGuard, last.DestinationSelector, last.IsInternal);
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an alternative internal transition with a synchronous action.
         /// Internal transitions execute their delegate for side effects only.
         /// </summary>
         public TransitionBuilder<TTrigger, TState> ExecuteAction(Action action = null)
         {
-            _pendingTransitions.Add((() => true, () => { action?.Invoke(); return Task.FromResult(_sourceState); }, true));
+            _pendingTransitions.Add((() => Task.FromResult(true),
+                () =>
+                {
+                    action?.Invoke();
+                    return Task.FromResult(_sourceState);
+                },
+                true));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an alternative internal transition with an asynchronous action.
+        /// </summary>
+        public TransitionBuilder<TTrigger, TState> ExecuteActionAsync(Func<Task> actionAsync = null)
+        {
+            _pendingTransitions.Add((() => Task.FromResult(true),
+                async () =>
+                {
+                    if (actionAsync != null)
+                        await actionAsync();
+                    return _sourceState;
+                },
+                true));
             return this;
         }
 
@@ -84,8 +129,8 @@ namespace DStateMachine
         {
             foreach (var (guard, destinationSelector, isInternal) in _pendingTransitions)
             {
-                Func<Task<bool>> asyncGuard = () => Task.FromResult(guard());
-                _machine.AddTransition(_sourceState, _trigger, asyncGuard, destinationSelector, isInternal);
+                // The guard is already asynchronous.
+                _machine.AddTransition(_sourceState, _trigger, guard, destinationSelector, isInternal);
             }
         }
     }
