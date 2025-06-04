@@ -50,6 +50,19 @@ namespace DStateMachine
             return new StateConfiguration<TTrigger, TState>(state, this);
         }
 
+        /// <summary>
+        /// Begins configuration for multiple states.
+        /// Each configured action or transition will be applied to all provided states.
+        /// </summary>
+        public MultiStateConfiguration<TTrigger, TState> ForStates(params TState[] states)
+        {
+            foreach (var state in states)
+            {
+                GetOrCreateStateActions(state);
+            }
+            return new MultiStateConfiguration<TTrigger, TState>(states, this);
+        }
+
         public DStateMachine<TTrigger, TState> DefaultOnEntry(Func<DStateMachine<TTrigger, TState>, Task> action)
         {
             _defaultEntryActions.Add(action);

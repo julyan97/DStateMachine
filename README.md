@@ -31,6 +31,9 @@ sm.ForState("B").OnEntry(() => Console.WriteLine("Entered B"));
 
 await sm.TriggerAsync("toB");
 Console.WriteLine(sm.CurrentState); // Output: B
+
+// Configure a trigger for multiple states at once
+sm.ForStates("A", "B").OnTrigger("reset", tb => tb.ChangeState("A"));
 ```
 
 ---
@@ -141,7 +144,7 @@ Console.WriteLine(dot);
 
 1. Clone the repository or add the files to your project.
 2. Create a new instance: `new DStateMachine<TTrigger, TState>(initialState)`.
-3. Configure states using `.ForState(state)` and chain `OnEntry`, `OnExit`, and `OnTrigger`.
+3. Configure states using `.ForState(state)` or `.ForStates(state1, state2, ...)` and chain `OnEntry`, `OnExit`, and `OnTrigger`.
 4. Fire transitions using `Trigger(trigger)` or `await TriggerAsync(trigger)`.
 
 ---

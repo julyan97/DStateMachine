@@ -391,6 +391,23 @@ namespace Tests
             Assert.Equal(TestState.B, sm.CurrentState);
         }
 
+        [Fact]
+        public void MultiStateConfiguration_TriggerFromAnyState_Test()
+        {
+            var sm = new DStateMachine<string, string>("A");
+            sm.ForStates("A", "B").OnTrigger("go", tb => tb.ChangeState("C"));
+            sm.ForState("C").OnEntry(() => Task.CompletedTask);
+
+            sm.Trigger("go");
+            Assert.Equal("C", sm.CurrentState);
+
+            var sm2 = new DStateMachine<string, string>("B");
+            sm2.ForStates("A", "B").OnTrigger("go", tb => tb.ChangeState("C"));
+            sm2.ForState("C").OnEntry(() => Task.CompletedTask);
+            sm2.Trigger("go");
+            Assert.Equal("C", sm2.CurrentState);
+        }
+
         #endregion
     }
 }
