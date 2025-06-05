@@ -15,33 +15,34 @@
         <RepositoryUrl>https://github.com/julyan97/DStateMachine</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>	StateMachine;FSM;Transitions;Asynchronous;DotNet;CSharp;</PackageTags>
-        <PackageReleaseNotes>Release Notes v1.0.4
+        <PackageReleaseNotes>📦 Release Notes – Version 1.0.5
+✨ New Features
+Multi-State Configuration Support
 
-✅ Global Entry/Exit Actions: You can now define default entry and exit behaviors that run on every transition via DefaultOnEntry() and DefaultOnExit() methods.
+Introduced .ForStates method in DStateMachine, allowing configuration to be applied to multiple states simultaneously.
 
-🎯 Per-State Overrides: States can opt out of global actions using .IgnoreDefaultEntry() and .IgnoreDefaultExit().
+Added MultiStateConfiguration class enabling unified configuration of:
 
-🔄 Async Entry/Exit Support: OnEntry() and OnExit() now support async delegates and provide access to the state machine instance.
+Entry and exit actions
 
-🌳 Improved Visualization: New VisualizeAsTree() method for easy-to-read text-based layout of transitions.
+Trigger transitions
 
-✅ xUnit Test Coverage: Added unit tests to verify global action handling and ignore logic.
+This significantly simplifies the setup of shared behavior across multiple states without sacrificing full control.
 
-🛠️ Internal enhancements for cleaner async flow and state behavior control.
+🧪 Tests
+Added unit tests to ensure transitions work correctly when configured using .ForStates.
 
-Added a new IfAsync method to support asynchronous guard conditions.
+📚 Documentation
+Updated the README:
 
-Updated all transition delegates (fixed, dynamic, and internal) to support asynchronous execution.
+Added usage example for .ForStates
 
-Async Action Support:
+Included in the “Getting Started” section to help users quickly adopt the new approach.
 
-Added the ExecuteActionAsync method to allow asynchronous execution of side-effect actions during internal transitions.
-
-Maintained backward compatibility by keeping the synchronous ExecuteAction method with wrapping.
-            
-These changes provide a flexible and robust asynchronous state machine framework while ensuring existing synchronous functionality remains intact.</PackageReleaseNotes>
+✅ Summary
+These enhancements streamline state machine configuration, reduce duplication, and provide a clean way to manage shared behaviors across states—improving maintainability and developer productivity.</PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <Version>1.0.4</Version>
+        <Version>1.0.5</Version>
     </PropertyGroup>
 
 
